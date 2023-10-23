@@ -1,0 +1,26 @@
+wifi:
+  ssid: ${ssid}
+  password: ${password}
+  ap:
+    ssid: ${devicename}
+    password: ${password}
+
+  manual_ip:
+    static_ip: ${ipaddr}
+    gateway: ${gateway}
+    subnet: ${subnet}
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API with encryption
+api:
+  encryption:
+    key: ${api_key}
+
+# Enable OTA updates
+ota:
+  password: ${ota_password}
+  safe_mode: True
