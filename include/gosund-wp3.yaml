@@ -1,0 +1,53 @@
+esphome:
+  name: ${devicename}
+  friendly_name: ${friendlyname}
+
+esp8266:
+  board: esp01_1m
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO4
+      mode: INPUT_PULLUP
+      inverted: True
+    name: "Button"
+    id: input_button
+    on_press:
+      - switch.toggle: "relay"
+  - platform: status
+    name: "Status"
+    id: dev_status
+
+switch:
+  - platform: gpio
+    name: "Relay"
+    id: "relay"
+    pin: GPIO14
+    on_turn_on:
+      - output.turn_on: led
+    on_turn_off:
+      - output.turn_off: led
+
+status_led:
+  pin:
+    number: GPIO12
+    inverted: yes
+
+output:
+  - platform: gpio
+    pin: GPIO13
+    inverted: true
+    id: led
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "Uptime"
+    update_interval: 60s
+
+text_sensor:
+  - platform: version
+    name: "ESPHome Version"

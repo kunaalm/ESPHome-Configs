@@ -1,0 +1,108 @@
+esphome:
+  name: ${devicename}
+  friendly_name: ${friendlyname}
+
+  platform: ESP8266
+  board: esp01_1m
+
+# Relay connected to GPIO05
+switch:
+  - platform: gpio
+    name: "Relay"
+    pin: GPIO05
+    id: relay
+    restore_mode: RESTORE_DEFAULT_ON
+    internal: True
+
+  # action when relay is on
+    on_turn_on:
+      - switch.turn_on: red_led
+      - switch.turn_off: blue_led
+      - text_sensor.template.publish:
+          id: relay_state
+          state: "ON"
+  
+  # action when relay is off
+    on_turn_off:
+      - switch.turn_off: red_led
+      - switch.turn_on: blue_led
+      - text_sensor.template.publish:
+          id: relay_state
+          state: "OFF"
+
+  # Red led connected to GPIO12
+  - platform: gpio
+    pin: GPIO12
+    id: red_led
+
+  # Blue led connected to GPIO14
+  - platform: gpio
+    pin: GPIO14
+    id: blue_led
+
+  # Virtual switch 
+  - platform: template
+    name: "Switch"
+    id: soft_switch
+    optimistic: true
+
+# Button connected to GPIO03
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO03
+      mode: INPUT_PULLUP
+      inverted: True
+    id: button_input
+    internal: True
+
+    # Send messasge to Home Assistant when button is pressed
+    on_click:
+      min_length: 50ms
+      max_length: 350ms
+      then:
+        - lambda: |-
+            id(soft_switch).publish_state(!id(soft_switch).state);
+              
+    # Toggle relay when button is double clicked
+    on_double_click:
+      min_length: 300ms
+      max_length: 500ms
+      then:
+        - switch.toggle: relay
+
+text_sensor:
+# Expose relay state to Home Assistant
+  - platform: template
+    name: "Relay State"
+    id: relay_state
+
+  - platform: version
+    name: ESPHome Version
+
+# Expose WiFi information as sensors.
+  - platform: wifi_info
+    ip_address:
+      name: IP Address
+    ssid:
+      name: SSID
+    bssid:
+      name: BSSID
+    mac_address:
+      name: "MAC Address"
+
+# Sensors with general information.
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "Uptime"
+    update_interval: 60s
+
+# Expose restart button to Home Assistant
+button:
+  - platform: restart
+    name: "Restart"
+    id: restart_button
+    entity_category: diagnostic

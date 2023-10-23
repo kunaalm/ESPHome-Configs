@@ -1,0 +1,97 @@
+esphome:
+  name: ${devicename}
+  friendly_name: ${friendlyname}
+  platform: ESP8266
+  board: esp01_1m
+
+# On boot set the virtual_switch to the input state
+  on_boot:
+    priority: -100
+    then:
+      - lambda: |-
+          if (id(input).state == true) {
+            id(virtual_switch).publish_state(true);
+          } else {
+            id(virtual_switch).publish_state(false);
+          }
+          id(relay).turn_on();
+
+# Text sensor with general information
+text_sensor:
+  - platform: version
+    name: Version
+
+  # Expose relay state as a sensor.
+  - platform: template
+    name: Relay State
+    lambda: |-
+      if (id(relay).state) {
+        return to_string("ON");
+      } else {
+        return to_string("OFF");
+      }
+      
+  # Expose WiFi information as sensors.
+  - platform: wifi_info
+    ip_address:
+      name: IP Address
+    ssid:
+      name: SSID
+    bssid:
+      name: BSSID
+
+# Sensors with general information.
+sensor:
+  # Uptime sensor.
+  - platform: uptime
+    name: Uptime
+
+  # WiFi Signal sensor.
+  - platform: wifi_signal
+    name: WiFi Signal
+    update_interval: 60s
+
+# Shelly 1 relay GPIO4
+switch:
+  - platform: gpio
+    name: Relay
+    pin: GPIO4
+    id: relay
+    restore_mode: RESTORE_DEFAULT_ON
+    internal: true
+
+  - platform: template
+    name: switch
+    id: virtual_switch
+    optimistic: true
+
+binary_sensor:
+  # Shelly 1 input GPIO5
+  - platform: gpio
+    internal: true
+    id: input
+    pin:
+      number: GPIO5
+#      mode: INPUT_PULLUP
+#      inverted: True
+    on_double_click:
+     min_length: 10ms
+     max_length: 250ms
+     then:
+       - lambda: |-
+           id(relay).toggle();
+           ESP_LOGD("${devicename}", "Double click");
+      
+    on_multi_click:
+      - timing:
+          - ON for at least 300ms
+        then:
+          - lambda: |-
+              id(virtual_switch).publish_state(id(input).state);
+              ESP_LOGD("${devicename}", "switched ON");
+      - timing:
+          - OFF for at least 300ms
+        then:
+          - lambda: |-
+              id(virtual_switch).publish_state(id(input).state);
+              ESP_LOGD("${devicename}", "switched OFF");

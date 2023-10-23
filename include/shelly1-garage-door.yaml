@@ -1,0 +1,49 @@
+esphome:
+  name: ${devicename}
+  friendly_name: ${friendlyname}
+
+esp8266:
+  board: esp01_1m
+
+# Relay connedted to GPI04 aways off on boot
+switch:
+  - platform: gpio
+    pin: GPIO04
+    id: relay
+#    inverted: true
+    restore_mode: RESTORE_DEFAULT_OFF
+    internal: true
+
+  - platform: restart
+    name: Restart
+
+button:
+  - platform: template
+    name: "Button"
+    id: virtual_button
+    on_press:
+      - switch.turn_on: relay
+      - delay: 30ms
+      - switch.turn_off: relay
+    
+# Expose basic information about the device using a text sensor
+text_sensor:
+  - platform: version
+    name: Version
+  - platform: wifi_info
+    ip_address:
+      name: IP Address
+    ssid:
+      name: SSID
+    bssid:
+      name: BSSID
+
+# Sensors with general information
+sensor:
+  - platform: wifi_signal
+    name: WiFi Signal
+    update_interval: 60s
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+
